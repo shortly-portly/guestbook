@@ -1,0 +1,49 @@
+{:duct.profile/base
+ {:duct.core/project-ns guestbook
+
+  ;routes
+  :duct.router/ataraxy
+  {:routes
+   {[:get "/"] [:guestbook.handler.guestbook/home]
+    [:post "/"] [:guestbook.handler.guestbook/save-message]
+    [:get "/query/" id "/foo/" bar] [:guestbook.handler.guestbook/query ^int id ^int bar]
+     }}
+
+  ;handlers
+  [:guestbook.handler.guestbook/home]
+  {
+   :wibble "Goodbye Cruel World"
+   :db #ig/ref :duct.database/sql
+   :sql ["SELECT * FROM guestbook WHERE name = ?"]
+  }
+
+  [:guestbook.handler.guestbook/save-message]
+  {:db #ig/ref :duct.database/sql
+   :my-params [name]}
+
+  [:guestbook.handler.guestbook/query]
+   {:db #ig/ref :duct.database/sql
+    :request {[_ id] :ataraxy/result}
+    :my-params [id]
+    :sql ["SELECT * FROM guestbook WHERE id = ?" :id]
+    }
+
+  ;migrations
+  :duct.migrator/ragtime
+  {:migrations [#ig/ref :guestbook.migration/create-guestbook]}
+
+  [:duct.migrator.ragtime/sql :guestbook.migration/create-guestbook]
+  {:up [#duct/resource "guestbook/migrations/create-guestbook.up.sql"]
+   :down [#duct/resource "guestbook/migrations/create-guestbook.down.sql"]}
+
+  }
+
+ :duct.profile/dev   #duct/include "dev"
+ :duct.profile/local #duct/include "local"
+ :duct.profile/prod  {}
+
+ :duct.module/logging {}
+ :duct.module.web/site
+ {}
+ :duct.module/sql
+ {}}
